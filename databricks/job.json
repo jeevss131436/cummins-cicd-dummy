@@ -18,7 +18,7 @@
   "trigger": {
     "pause_status": "UNPAUSED",
     "file_arrival": {
-      "url": "/Volumes/<catalog>/dch_demo/landing/"
+      "url": "/Volumes/workspace/dch_demo/landing/"
     }
   },
   "max_concurrent_runs": 1,
