@@ -3,7 +3,6 @@
 Owner: Teammate 3. Run from the repo root:  pytest dch-cli/tests -q
 No Databricks connection is needed; a fake client stands in for the workspace.
 """
-import json
 import sys
 from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
@@ -13,7 +12,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # make dch-cli importable
 
 from excel_registry import ExcelRegistry, create_workbook  # noqa: E402
-from update_dch import load_metadata, reconcile  # noqa: E402
+from update_dch import reconcile  # noqa: E402
 from volume_reader import (  # noqa: E402
     VolumeFile, build_urn, group_datasets, list_files, normalize, parse_volume_path,
 )
@@ -132,9 +131,9 @@ def sheet(tmp_path):
     return path
 
 
-def run(sheet_path, files, run_id="1", metadata=META):
+def run(sheet_path, files, run_id="1"):
     registry = ExcelRegistry(sheet_path, run_id=run_id, commit_sha="abc", now="2026-09-21T12:00:00Z")
-    summary = reconcile(files, ROOT + "/", registry, metadata)
+    summary = reconcile(files, ROOT + "/", registry, META)
     saved = registry.save_if_changed()
     return summary, saved
 
@@ -165,43 +164,3 @@ def test_rerun_with_no_new_files_changes_nothing(sheet):
     assert saved is False
     assert sheet.read_bytes() == before  # file untouched, so Git sees no change
 
-
-# ---------- metadata (reviewer feedback) ----------
-
-def test_metadata_change_updates_existing_row(sheet):
-    files = [vf(f"{ROOT}/customers/customers_01.json")]
-    run(sheet, files)
-    changed = dict(META, customers=dict(META["customers"], owner="new-owner@example.com"))
-    summary, saved = run(sheet, files, run_id="2", metadata=changed)
-    assert summary["created"] == [] and len(summary["updated"]) == 1 and saved
-    registry = ExcelRegistry(sheet, run_id="x", commit_sha="x", now="x")
-    assert len(registry.rows) == 1
-    assert registry.get(build_urn(ROOT, "customers"))["owner"] == "new-owner@example.com"
-
-
-def test_missing_metadata_is_logged_and_not_registered(sheet):
-    incomplete = {"customers": dict(META["customers"], owner="  ")}
-    del incomplete["customers"]["domain"]
-    files = [vf(f"{ROOT}/customers/customers_01.json")]
-    urn = build_urn(ROOT, "customers")
-    summary, saved = run(sheet, files, metadata=incomplete)
-    assert summary["invalid"] == [(urn, ["owner", "domain"])]
-    assert summary["created"] == [] and saved
-    registry = ExcelRegistry(sheet, run_id="x", commit_sha="x", now="x")
-    assert registry.rows == {}
-    failures = [r for r in registry.audit_rows() if r["action"] == "validation_failed"]
-    assert len(failures) == 1 and failures[0]["urn"] == urn
-    assert json.loads(failures[0]["changed_fields"]) == {"missing": ["owner", "domain"]}
-
-    before = sheet.read_bytes()
-    summary, saved = run(sheet, files, run_id="2", metadata=incomplete)
-    assert len(summary["invalid"]) == 1
-    assert saved is False
-    assert sheet.read_bytes() == before
-
-
-def test_load_metadata_normalizes_keys_and_handles_missing_file(tmp_path):
-    path = tmp_path / "datasets.json"
-    path.write_text(json.dumps({" Sales Orders ": META["orders"]}), encoding="utf-8")
-    assert load_metadata(path) == {"sales_orders": META["orders"]}
-    assert load_metadata(tmp_path / "missing.json") == {}

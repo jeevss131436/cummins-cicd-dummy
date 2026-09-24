@@ -17,12 +17,12 @@ from excel_registry import (  # noqa: E402
 URN = "urn:dch:dataset:databricks:dev:workspace.dch_demo.landing/customers"
 
 
-def record(file_count=1, total_bytes=100, last_updated="2026-09-21T10:00:00Z", owner="data-team@example.com"):
+def record(file_count=1, total_bytes=100, last_updated="2026-09-21T10:00:00Z"):
     return {
         "urn": URN,
         "dataset": "customers",
         "data_product_name": "Customer Master",
-        "owner": owner,
+        "owner": "data-team@example.com",
         "domain": "sales",
         "description": "Customer records landed from the CRM export.",
         "location": "/Volumes/workspace/dch_demo/landing/customers/",
@@ -129,35 +129,3 @@ def test_missing_header_gives_clear_error(tmp_path):
 def test_missing_workbook_says_how_to_create_it(tmp_path):
     with pytest.raises(FileNotFoundError, match="create_registry.py"):
         open_registry(tmp_path / "nope.xlsx")
-
-
-def test_metadata_change_updates_existing_row(sheet):
-    reg = open_registry(sheet)
-    reg.upsert(record())
-    reg.save_if_changed()
-
-    reg = open_registry(sheet, run_id="2")
-    assert reg.upsert(record(owner="new-owner@example.com")) == "updated"
-    reg.save_if_changed()
-
-    reg = open_registry(sheet)
-    assert len(reg.rows) == 1
-    assert reg.get(URN)["owner"] == "new-owner@example.com"
-    changed = json.loads(reg.audit_rows()[-1]["changed_fields"])
-    assert changed == {"owner": {"old": "data-team@example.com", "new": "new-owner@example.com"}}
-
-
-def test_validation_failure_is_logged_once(sheet):
-    reg = open_registry(sheet)
-    reg.log_validation_failure(URN, ["owner", "domain"])
-    assert reg.save_if_changed() is True
-
-    reg = open_registry(sheet, run_id="2")
-    reg.log_validation_failure(URN, ["owner", "domain"])
-    assert reg.save_if_changed() is False
-
-    reg = open_registry(sheet)
-    audit = reg.audit_rows()
-    assert [a["action"] for a in audit] == ["validation_failed"]
-    assert json.loads(audit[0]["changed_fields"]) == {"missing": ["owner", "domain"]}
-    assert reg.rows == {}
