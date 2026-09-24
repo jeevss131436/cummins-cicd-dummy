@@ -1,0 +1,5 @@
+[
+  {"order_id": "A-5001", "customer_id": 1001, "order_date": "2026-09-02", "total_usd": 42.50},
+  {"order_id": "A-5002", "customer_id": 1002, "order_date": "2026-09-04", "total_usd": 118.00},
+  {"order_id": "A-5003", "customer_id": 1003, "order_date": "2026-09-06", "total_usd": 19.99}
+]

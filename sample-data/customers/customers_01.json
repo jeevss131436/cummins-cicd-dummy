@@ -1,0 +1,5 @@
+[
+  {"customer_id": 1001, "name": "Avery Chen", "state": "IN", "signup_date": "2026-08-02", "plan": "basic"},
+  {"customer_id": 1002, "name": "Jordan Patel", "state": "IL", "signup_date": "2026-08-05", "plan": "pro"},
+  {"customer_id": 1003, "name": "Sam Rivera", "state": "OH", "signup_date": "2026-08-11", "plan": "basic"}
+]

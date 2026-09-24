@@ -1,0 +1,5 @@
+[
+  {"sku": "FLT-2041", "warehouse": "Columbus-IN", "on_hand": 340, "as_of": "2026-09-10"},
+  {"sku": "PMP-0877", "warehouse": "Columbus-IN", "on_hand": 58, "as_of": "2026-09-10"},
+  {"sku": "GSK-1190", "warehouse": "Seymour-IN", "on_hand": 1275, "as_of": "2026-09-10"}
+]

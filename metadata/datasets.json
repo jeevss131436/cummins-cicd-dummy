@@ -1,0 +1,19 @@
+{
+  "customers": {
+    "data_product_name": "Customer Master",
+    "owner": "customer-data-team@example.com",
+    "domain": "Sales",
+    "description": "One record per customer with home state, signup date, and plan tier."
+  },
+  "orders": {
+    "data_product_name": "Customer Orders",
+    "owner": "order-analytics-team@example.com",
+    "domain": "Commerce",
+    "description": "One record per order with customer ID, order date, and total in USD."
+  },
+  "inventory": {
+    "data_product_name": "Warehouse Inventory",
+    "owner": "",
+    "description": "On-hand stock by SKU and warehouse as of a snapshot date."
+  }
+}

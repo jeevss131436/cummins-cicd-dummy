@@ -1,0 +1,4 @@
+[
+  {"customer_id": 1004, "name": "Riley Brooks", "state": "IN", "signup_date": "2026-09-01", "plan": "pro"},
+  {"customer_id": 1005, "name": "Morgan Lee", "state": "MI", "signup_date": "2026-09-03", "plan": "basic"}
+]
