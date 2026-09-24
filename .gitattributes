@@ -1,0 +1,9 @@
+# Treat the Excel sheet as binary so Git never tries to merge or diff it
+*.xlsx binary
+
+# Keep line endings consistent across macOS, Linux and Windows
+*.py   text eol=lf
+*.yml  text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.csv  text eol=lf

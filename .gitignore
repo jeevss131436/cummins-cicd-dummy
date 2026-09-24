@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Excel lock files created while the sheet is open
+~$*.xlsx
+
+# Local secrets, never commit these
+.env
+.databrickscfg
+
+# OS clutter
+.DS_Store
+Thumbs.db
