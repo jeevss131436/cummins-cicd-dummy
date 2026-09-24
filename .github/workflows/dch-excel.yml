@@ -1,0 +1,57 @@
+name: DCH Excel update
+on:
+  # Sent by the Databricks notebook when a new file lands in the volume.
+  repository_dispatch:
+    types: [databricks_file_arrival]
+  # Adds a "Run workflow" button on the Actions tab for testing and as a demo backup.
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Show what would change without saving the sheet
+        type: boolean
+        default: false
+  # Re-runs when someone edits dataset metadata (data product name, owner, domain, description).
+  push:
+    branches: [main]
+    paths: [metadata/datasets.json]
+# Runs wait in line instead of overlapping, so two runs never edit the sheet at once.
+concurrency:
+  group: dch-excel
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out the shared repo
+        uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: dch-cli/requirements.txt
+      - name: Install dependencies
+        run: pip install -r dch-cli/requirements.txt
+      - name: Update the DCH sheet
+        id: update
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DCH_VOLUME_PATH: ${{ vars.DCH_VOLUME_PATH }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          args=(--path "$DCH_VOLUME_PATH" --workbook dch/dch_registry.xlsx)
+          if [ "$DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          python dch-cli/update_dch.py "${args[@]}"
+      - name: Commit the DCH sheet
+        if: steps.update.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dch/dch_registry.xlsx
+          git commit -m "DCH sheet update from run ${{ github.run_id }}"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
